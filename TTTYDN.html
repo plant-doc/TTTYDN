@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe - You Don't Know</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #00ffff; /* Bright Cyan Background */
+      box-sizing: border-box;
+      padding: 20px;
+    }
+    h1 {
+      margin-top: 0;
+      margin-bottom: 5px;
+      font-size: 3rem; 
+      color: #000;
+    }
+    p {
+      color: #333;
+      margin-top: 0;
+      margin-bottom: 22px;
+      max-width: 660px; 
+      text-align: center;
+      font-size: 1.35rem; 
+      font-weight: bold;
+    }
+    .mode-container, .setup-container {
+      margin-bottom: 22px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+    }
+    .mode-btn, .symbol-btn {
+      padding: 12px 22px; 
+      font-size: 1.35rem; 
+      cursor: pointer;
+      border: 2px solid #000;
+      background-color: #fff;
+      border-radius: 6px;
+      font-weight: bold;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-btn.active {
+      background-color: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    .symbol-btn {
+      background-color: #fff;
+      color: #000;
+      min-width: 80px;
+    }
+    .symbol-btn:active {
+      background-color: #ddd;
+    }
+    #status {
+      font-size: 1.8rem; 
+      margin-bottom: 30px;
+      font-weight: bold;
+      color: #000;
+      text-align: center;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 150px); 
+      grid-template-rows: repeat(3, 150px); 
+      gap: 7.5px; 
+      background-color: #333;
+      border: 7.5px solid #333;
+    }
+    .cell {
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.75rem; 
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cell:hover {
+      background-color: #f0f0f0;
+    }
+    .cell.x-piece {
+      color: #e74c3c; /* Red */
+    }
+    .cell.o-piece {
+      color: #3498db; /* Blue */
+    }
+    #restartBtn {
+      margin-top: 30px;
+      padding: 15px 30px; 
+      font-size: 1.5rem; 
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #000;
+      border-radius: 7.5px;
+      font-weight: bold;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #restartBtn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe - You Don't Know</h1>
+  <p>Each click randomly places an X or an O. First to align 3 of their assigned symbols wins!</p>
+
+  <div class="mode-container">
+    <button id="singlePlayerBtn" class="mode-btn active">Single Player (vs AI)</button>
+    <button id="twoPlayerBtn" class="mode-btn">Two Players</button>
+  </div>
+
+  <div id="setupView" class="setup-container">
+    <span id="promptText" style="font-size: 1.35rem; font-weight: bold; align-self: center; color: #000;">Choose your symbol:</span>
+    <button id="chooseXBtn" class="symbol-btn">X</button>
+    <button id="chooseOBtn" class="symbol-btn">O</button>
+  </div>
+
+  <div id="status" style="display: none;">Setting up game...</div>
+  
+  <div id="board" style="display: none;">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+  
+  <button id="restartBtn" style="display: none;">Restart Game</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const cells = document.querySelectorAll('.cell');
+    const statusText = document.getElementById('status');
+    const restartBtn = document.getElementById('restartBtn');
+    const singlePlayerBtn = document.getElementById('singlePlayerBtn');
+    const twoPlayerBtn = document.getElementById('twoPlayerBtn');
+    const setupView = document.getElementById('setupView');
+    const promptText = document.getElementById('promptText');
+    const chooseXBtn = document.getElementById('chooseXBtn');
+    const chooseOBtn = document.getElementById('chooseOBtn');
+
+    let o0 = "", o1 = "", o2 = "", o3 = "", o4 = "", o5 = "", o6 = "", o7 = "", o8 = "";
+    
+    let activePlayer = 1; 
+    let running = false; 
+    let isAiMode = true;
+    
+    let playerSymbol = 'X'; 
+    let secondarySymbol = 'O';
+
+    initializeGame();
+
+    function initializeGame() {
+      cells.forEach(cell => cell.addEventListener('click', cellClicked));
+      restartBtn.addEventListener('click', restartGame);
+      singlePlayerBtn.addEventListener('click', () => changeMode(true));
+      twoPlayerBtn.addEventListener('click', () => changeMode(false));
+      chooseXBtn.addEventListener('click', () => selectSymbol('X'));
+      chooseOBtn.addEventListener('click', () => selectSymbol('O'));
+      prepareSetupUI();
+    }
+
+    function prepareSetupUI() {
+      board.style.display = 'none';
+      restartBtn.style.display = 'none';
+      statusText.style.display = 'none';
+      setupView.style.display = 'flex';
+      promptText.textContent = isAiMode ? "Choose your symbol:" : "Player 1, choose your symbol:";
+    }
+
+    function selectSymbol(choice) {
+      playerSymbol = choice;
+      secondarySymbol = (choice === 'X') ? 'O' : 'X';
+      setupView.style.display = 'none';
+      board.style.display = 'grid';
+      restartBtn.style.display = 'inline-block';
+      statusText.style.display = 'block';
+      running = true;
+      
+      if (isAiMode) {
+        activePlayer = Math.random() < 0.5 ? 1 : 2;
+        updateStatusText();
+        if (activePlayer === 2) setTimeout(aiMove, 600);
+      } else {
+        activePlayer = 1;
+        updateStatusText();
+      }
+    }
+
+    function changeMode(aiModeSelected) {
+      isAiMode = aiModeSelected;
+      if (isAiMode) {
+        singlePlayerBtn.classList.add('active');
+        twoPlayerBtn.classList.remove('active');
+      } else {
+        twoPlayerBtn.classList.add('active');
+        singlePlayerBtn.classList.remove('active');
+      }
+      restartGame();
+    }
+
+    function announceWinner(announcementText) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(announcementText);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function cellClicked() {
+      const cellIndex = parseInt(this.getAttribute('data-index'));
+      
+      let slotVal = "";
+      if (cellIndex === 0) slotVal = o0;
+      if (cellIndex === 1) slotVal = o1;
+      if (cellIndex === 2) slotVal = o2;
+      if (cellIndex === 3) slotVal = o3;
+      if (cellIndex === 4) slotVal = o4;
+      if (cellIndex === 5) slotVal = o5;
+      if (cellIndex === 6) slotVal = o6;
+      if (cellIndex === 7) slotVal = o7;
+      if (cellIndex === 8) slotVal = o8;
+
+      if (slotVal !== '' || !running || (isAiMode && activePlayer === 2)) return;
+      executeMove(this, cellIndex);
+    }
+
+    function executeMove(cellElement, index) {
+      const assignedSymbol = Math.random() < 0.5 ? 'X' : 'O';
+      
+      if (index === 0) o0 = assignedSymbol;
+      if (index === 1) o1 = assignedSymbol;
+      if (index === 2) o2 = assignedSymbol;
+      if (index === 3) o3 = assignedSymbol;
+      if (index === 4) o4 = assignedSymbol;
+      if (index === 5) o5 = assignedSymbol;
+      if (index === 6) o6 = assignedSymbol;
+      if (index === 7) o7 = assignedSymbol;
+      if (index === 8) o8 = assignedSymbol;
+      
+      cellElement.textContent = assignedSymbol;
+      cellElement.classList.remove('x-piece', 'o-piece');
+      cellElement.classList.add(assignedSymbol === 'X' ? 'x-piece' : 'o-piece');
+      
+      if (checkWinner(playerSymbol)) {
+        endTheMatch(`${playerSymbol} wins!`);
+        return;
+      } else if (checkWinner(secondarySymbol)) {
+        endTheMatch(`${secondarySymbol} wins!`);
+        return;
+      }
+
+      if (o0!="" && o1!="" && o2!="" && o3!="" && o4!="" && o5!="" && o6!="" && o7!="" && o8!="") {
+        endTheMatch("It's a draw!");
+        return;
+      }
+
+      activePlayer = (activePlayer === 1) ? 2 : 1;
+      updateStatusText();
+
+      if (isAiMode && activePlayer === 2 && running) {
+        setTimeout(aiMove, 400);
+      }
+    }
+
+    function endTheMatch(msg) {
+      statusText.textContent = msg;
+      running = false;
+      announceWinner(msg);
+    }
+
+    function aiMove() {
+      if (!running) return;
+      let bestScore = -Infinity;
+      let move = 0;
+
+      for (let i = 0; i < 9; i++) {
+        let isAvailable = false;
+        if (i === 0 && o0 === "") isAvailable = true;
+        if (i === 1 && o1 === "") isAvailable = true;
+        if (i === 2 && o2 === "") isAvailable = true;
+        if (i === 3 && o3 === "") isAvailable = true;
+        if (i === 4 && o4 === "") isAvailable = true;
+        if (i === 5 && o5 === "") isAvailable = true;
+        if (i === 6 && o6 === "") isAvailable = true;
+        if (i === 7 && o7 === "") isAvailable = true;
+        if (i === 8 && o8 === "") isAvailable = true;
+
+        if (isAvailable) {
+          let score = evaluateCellValue(i);
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+
+      const targetCell = document.querySelector(`.cell[data-index="${move}"]`);
+      executeMove(targetCell, move);
+    }
+
+    function evaluateCellValue(index) {
+      let score = 0;
+      
+      setSlot(index, playerSymbol);
+      if (checkWinner(playerSymbol)) score += 15; 
+      
+      setSlot(index, secondarySymbol);
+      if (checkWinner(secondarySymbol)) score += 20;
+      
+      setSlot(index, ""); 
+      
+      if (index === 4) score += 2; 
+      if (index === 0 || index === 2 || index === 6 || index === 8) score += 1; 
+      return score;
+    }
+
+    function setSlot(index, val) {
+      if (index === 0) o0 = val;
+      if (index === 1) o1 = val;
+      if (index === 2) o2 = val;
+      if (index === 3) o3 = val;
+      if (index === 4) o4 = val;
+      if (index === 5) o5 = val;
+      if (index === 6) o6 = val;
+      if (index === 7) o7 = val;
+      if (index === 8) o8 = val;
+    }
+
+    function updateStatusText() {
+      const p1Clr = playerSymbol === 'X' ? 'Red' : 'Blue';
+      const p2Clr = secondarySymbol === 'X' ? 'Red' : 'Blue';
+      if (isAiMode) {
+        statusText.textContent = activePlayer === 1 ? `Your turn (${playerSymbol} - ${p1Clr})` : `AI is calculating...`;
+      } else {
+        statusText.textContent = activePlayer === 1 ? `Player 1's turn (${playerSymbol} - ${p1Clr})` : `Player 2's turn (${secondarySymbol} - ${p2Clr})`;
+      }
+    }
+
+    function checkWinner(s) {
+      if (o0 === s && o1 === s && o2 === s) return true;
+      if (o3 === s && o4 === s && o5 === s) return true;
+      if (o6 === s && o7 === s && o8 === s) return true;
+      
+      if (o0 === s && o3 === s && o6 === s) return true;
+      if (o1 === s && o4 === s && o7 === s) return true;
+      if (o2 === s && o5 === s && o8 === s) return true;
+      
+      if (o0 === s && o4 === s && o8 === s) return true;
+      if (o2 === s && o4 === s && o6 === s) return true;
+      
+      return false;
+    }
+
+    function restartGame() {
+      o0 = ""; o1 = ""; o2 = ""; o3 = ""; o4 = ""; o5 = ""; o6 = ""; o7 = ""; o8 = "";
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.classList.remove('x-piece', 'o-piece');
+      });
+      running = false;
+      prepareSetupUI();
+    }
+  </script>
+
+</body>
+</html>
