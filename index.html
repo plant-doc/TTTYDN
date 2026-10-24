@@ -134,6 +134,16 @@
   </div>
 
   <div id="status" style="display: none;">Setting up game...</div>
+
+<div id="scoreBoard"
+     style="
+        display:none;
+        font-size:1.5rem;
+        font-weight:bold;
+        margin-bottom:15px;
+        text-align:center;
+        color:#000;">
+</div>
   
   <div id="board" style="display: none;">
     <div class="cell" data-index="0"></div>
@@ -148,6 +158,19 @@
   </div>
   
   <button id="restartBtn" style="display: none;">Restart Game</button>
+
+<button id="resetScoresBtn"
+        style="
+          margin-top:10px;
+          padding:12px 22px;
+          font-size:1rem;
+          background:#dc3545;
+          color:white;
+          border:2px solid #000;
+          border-radius:6px;
+          font-weight:bold;">
+  Reset Scores
+</button>
 
   <script>
     const board = document.getElementById('board');
@@ -170,11 +193,49 @@
     let playerSymbol = 'X'; 
     let secondarySymbol = 'O';
 
-    initializeGame();
+let xWins =
+  parseInt(localStorage.getItem('xWins')) || 0;
+
+let oWins =
+  parseInt(localStorage.getItem('oWins')) || 0;
+
+let draws =
+  parseInt(localStorage.getItem('draws')) || 0;
+
+function updateScoreBoard() {
+
+  const board =
+    document.getElementById('scoreBoard');
+
+  board.innerHTML =
+    '<span style="color:#e74c3c;">X: ' +
+    xWins +
+    '</span>&nbsp;&nbsp;&nbsp;' +
+
+    '<span style="color:#3498db;">O: ' +
+    oWins +
+    '</span>&nbsp;&nbsp;&nbsp;' +
+
+    'Draws: ' +
+    draws;
+
+  localStorage.setItem('xWins', xWins);
+  localStorage.setItem('oWins', oWins);
+  localStorage.setItem('draws', draws);
+}    
+
+initializeGame();
 
     function initializeGame() {
+
+document.getElementById('scoreBoard')
+        .style.display = 'block';
+
+updateScoreBoard();
       cells.forEach(cell => cell.addEventListener('click', cellClicked));
       restartBtn.addEventListener('click', restartGame);
+      document.getElementById('resetScoresBtn')
+        .addEventListener('click', resetScores);
       singlePlayerBtn.addEventListener('click', () => changeMode(true));
       twoPlayerBtn.addEventListener('click', () => changeMode(false));
       chooseXBtn.addEventListener('click', () => selectSymbol('X'));
@@ -286,10 +347,25 @@
     }
 
     function endTheMatch(msg) {
-      statusText.textContent = msg;
-      running = false;
-      announceWinner(msg);
-    }
+
+  statusText.textContent = msg;
+
+  running = false;
+
+  if (msg.indexOf('X wins') >= 0) {
+    xWins++;
+  }
+  else if (msg.indexOf('O wins') >= 0) {
+    oWins++;
+  }
+  else {
+    draws++;
+  }
+
+  updateScoreBoard();
+
+  announceWinner(msg);
+}
 
     function aiMove() {
       if (!running) return;
@@ -373,6 +449,15 @@
       
       return false;
     }
+
+function resetScores() {
+
+  xWins = 0;
+  oWins = 0;
+  draws = 0;
+
+  updateScoreBoard();
+}
 
     function restartGame() {
       o0 = ""; o1 = ""; o2 = ""; o3 = ""; o4 = ""; o5 = ""; o6 = ""; o7 = ""; o8 = "";
