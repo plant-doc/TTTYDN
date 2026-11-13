@@ -135,14 +135,64 @@
 }
 
 
-@media (orientation: landscape) {
+@media (orientation: landscape) and (max-height: 850px) {
+
+  h1{
+    font-size:2.1rem;
+    margin-bottom:2px;
+  }
+
+  p{
+    font-size:1rem;
+    margin-top:0;
+    margin-bottom:4px;
+  }
+
+  .mode-container,
+  .setup-container{
+    margin-bottom:8px;
+    gap:10px;
+  }
+
+  .mode-btn,
+  .symbol-btn{
+    font-size:1rem;
+    padding:8px 14px;
+  }
+
+  #status{
+    font-size:1.2rem;
+    margin-bottom:8px;
+  }
+
+  #scoreBoard{
+    font-size:1rem;
+    margin-bottom:6px;
+  }
 
   #board{
-    width:200px;
-    height:200px;
+    width:min(55vh,80vw,380px);
+    height:min(55vh,80vw,380px);
+  }
+
+  .cell{
+    font-size:3rem;
+  }
+
+  #restartBtn{
+    margin-top:8px;
+    padding:10px 20px;
+    font-size:1.1rem;
+  }
+
+  #resetScoresBtn{
+    margin-top:4px;
+    padding:8px 18px;
+    font-size:.9rem;
   }
 
 }
+
 
 @media (max-width:900px){
 
